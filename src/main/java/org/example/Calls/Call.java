@@ -1,16 +1,18 @@
-package org.example;
+package org.example.Calls;
+
+import org.example.Tariffs.TariffType;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class Call {
-    CallType callType;
-    String phoneNumber;
-    LocalDateTime dateTimeStart;
-    LocalDateTime dateTimeEnd;
-    TariffType tariffType;
+    public CallType callType;
+    public String phoneNumber;
+    public LocalDateTime dateTimeStart;
+    public LocalDateTime dateTimeEnd;
+    public TariffType tariffType;
 
-    double rubCost;
+    public double rubCost;
 
     public Call(
             CallType callType,
@@ -26,7 +28,7 @@ public class Call {
         this.tariffType = tariffType;
     }
 
-    Duration getDuration() {
+    public Duration getDuration() {
         return Duration.between(dateTimeStart, dateTimeEnd);
     }
 }

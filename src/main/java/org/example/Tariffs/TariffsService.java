@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Tariffs;
 
 public class TariffsService {
 
@@ -11,16 +11,16 @@ public class TariffsService {
     private static final long unlimitedBaseCost = 100;
 
 
-    static double getMinutesRubCost(long minutes) {
+    public static double getMinutesRubCost(long minutes) {
         return minutes * defaultMinuteCost;
     }
 
-    static double getSimpleMinutesRubCost(long minutes) {
+    public static double getSimpleMinutesRubCost(long minutes) {
         long simpleMinutes = Math.min(minutes, simpleMinutesLimit);
         return (simpleMinutes * simpleMinuteCost) + getMinutesRubCost(minutes - simpleMinutes);
     }
 
-    static double getUnlimitedMinutesRubCost(long minutes) {
+    public static double getUnlimitedMinutesRubCost(long minutes) {
         long additionalMinutes = Math.max(minutes - unlimitedMinutesLimit, 0);
         return unlimitedBaseCost + additionalMinutes * unlimitedAdditionalMinuteCost;
     }

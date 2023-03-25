@@ -1,4 +1,9 @@
-package org.example;
+package org.example.Utils;
+
+import org.example.Calls.Call;
+import org.example.Calls.CallType;
+import org.example.Reports.Report;
+import org.example.Tariffs.TariffType;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -21,7 +26,7 @@ public class FileUtils {
     private static final DateTimeFormatter reportDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String reportDurationFormat = "%d:%02d:%02d";
 
-    static List<Call> readCallsFromFile() throws IOException {
+    public static List<Call> readCallsFromFile() throws IOException {
         List<Call> calls = new ArrayList<>();
         try (Scanner scanner = new Scanner(new File("cdr.txt"));) {
             while (scanner.hasNextLine()) {
@@ -31,7 +36,7 @@ public class FileUtils {
         return calls;
     }
 
-    static void writeReportsToFiles(List<Report> reports) throws IOException {
+    public static void writeReportsToFiles(List<Report> reports) throws IOException {
         for (Report report : reports) {
             writeFile(report);
         }

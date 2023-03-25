@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Tariffs;
 
 public enum TariffType {
     MINUTE("03"),

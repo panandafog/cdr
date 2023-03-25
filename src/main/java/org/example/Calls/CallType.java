@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Calls;
 
 public enum CallType {
     OUTGOING("01"),
