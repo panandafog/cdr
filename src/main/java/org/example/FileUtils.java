@@ -121,6 +121,15 @@ public class FileUtils {
 
         text.append(linesSeparator);
 
+        text.append(horisontalSeparator);
+        text.append(callTypeTitle).append(horisontalSeparator);
+        text.append(dateTimeStartTitle).append(horisontalSeparator);
+        text.append(dateTimeEndTitle).append(horisontalSeparator);
+        text.append(durationTitle).append(horisontalSeparator);
+        text.append(costTitle).append(horisontalSeparator).append("\n");
+
+        text.append(linesSeparator);
+
         for (int index = 0; index < report.calls.size(); index++) {
             text.append(horisontalSeparator);
             text.append(callTypes.get(index)).append(horisontalSeparator);
