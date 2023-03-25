@@ -1,7 +1,5 @@
 package org.example;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +11,6 @@ public class Report {
     List<Call> calls;
     TariffType tariffType;
     double totalRUBCost;
-
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Report(List<Call> calls) {
         phoneNumber = calls.get(0).phoneNumber;
@@ -50,32 +46,18 @@ public class Report {
 
             switch (tariffType) {
                 case MINUTE:
-                    newTotalCost = getMinutesRubCost(totalMinutes);
+                    newTotalCost = TariffsService.getMinutesRubCost(totalMinutes);
                     break;
                 case UNLIMITED:
-                    newTotalCost = getUnlimitedMinutesRubCost(totalMinutes);
+                    newTotalCost = TariffsService.getUnlimitedMinutesRubCost(totalMinutes);
                     break;
                 case SIMPLE:
-                    newTotalCost = getSimpleMinutesRubCost(totalMinutes);
+                    newTotalCost = TariffsService.getSimpleMinutesRubCost(totalMinutes);
                     break;
             }
 
             call.rubCost = newTotalCost - totalRUBCost;
             totalRUBCost = newTotalCost;
         }
-    }
-
-    private double getMinutesRubCost(long minutes) {
-        return minutes * 1.5;
-    }
-
-    private double getSimpleMinutesRubCost(long minutes) {
-        long simpleMinutes = Math.min(minutes, 100);
-        return (simpleMinutes * 0.5) + getMinutesRubCost(minutes - simpleMinutes);
-    }
-
-    private double getUnlimitedMinutesRubCost(long minutes) {
-        long additionalMinutes = Math.max(minutes - 300, 0);
-        return 100 + additionalMinutes;
     }
 }
