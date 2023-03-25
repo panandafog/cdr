@@ -1,5 +1,7 @@
 package org.example.Tariffs;
 
+import java.util.HashMap;
+
 public enum TariffType {
     MINUTE("03"),
     UNLIMITED("06"),
@@ -15,15 +17,15 @@ public enum TariffType {
         return id;
     }
 
-    public static TariffType fromString(String string) {
-        switch (string) {
-            case "03":
-                return TariffType.MINUTE;
-            case "06":
-                return TariffType.UNLIMITED;
-            case "11":
-                return TariffType.SIMPLE;
+    private static final HashMap<String, TariffType> valuesMap = new HashMap<>();
+
+    static {
+        for(TariffType value: TariffType.values()) {
+            valuesMap.put(value.getID(), value);
         }
-        return null;
+    }
+
+    public static TariffType fromString(String string) {
+        return valuesMap.get(string);
     }
 }

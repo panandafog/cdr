@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 public class FileUtils {
 
@@ -24,7 +25,9 @@ public class FileUtils {
     private static final String reportFileExtension = ".txt";
     private static final DateTimeFormatter cdrDateFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final DateTimeFormatter reportDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String reportDurationFormat = "%d:%02d:%02d";
+    private static final String reportDurationFormat = "%02d:%02d:%02d";
+    private static final String costFormat = "%,.2f";
+    private static final int datetimeStringLength = datetimeString(LocalDateTime.now()).length();
 
     public static List<Call> readCallsFromFile() throws IOException {
         List<Call> calls = new ArrayList<>();
@@ -42,81 +45,37 @@ public class FileUtils {
         }
     }
 
-    static String reportString(Report report) {
-        List<String> callTypes = new ArrayList<>();
-        List<String> dateTimesStart = new ArrayList<>();
-        List<String> dateTimesEnd = new ArrayList<>();
-        List<String> durations = new ArrayList<>();
-        List<String> costs = new ArrayList<>();
-
+    static void reportStrings(Report report, Consumer<String> rowHandler) {
         String callTypeTitle = "Call type";
         String dateTimeStartTitle = "Start time";
         String dateTimeEndTitle = "End time";
         String durationTitle = "Duration";
         String costTitle = "Cost";
 
-        int callTypeLength = callTypeTitle.length();
-        int dateTimeStartLength = dateTimeStartTitle.length();
-        int dateTimeEndLength = dateTimeEndTitle.length();
+        int callTypeLength = Math.max(callTypeTitle.length(), CallType.stringLength);
+        int dateTimeStartLength = Math.max(dateTimeStartTitle.length(), datetimeStringLength);
+        int dateTimeEndLength = Math.max(dateTimeEndTitle.length(), datetimeStringLength);
         int durationLength = durationTitle.length();
         int costLength = costTitle.length();
 
+        double maxCost = 0.0;
+        Duration maxDuration = Duration.ZERO;
+
         for (Call call : report.calls) {
-            String callType = String.valueOf(call.callType);
-            String dateTimeStart = call.dateTimeStart.format(reportDateFormatter);
-            String dateTimeEnd = call.dateTimeEnd.format(reportDateFormatter);
-            String duration = durationString(call.getDuration());
-            String cost = String.valueOf(call.rubCost);
+            maxCost = Math.max(call.rubCost, maxCost);
 
-            callTypeLength = Math.max(callType.length(), callTypeLength);
-            dateTimeStartLength = Math.max(dateTimeStart.length(), dateTimeStartLength);
-            dateTimeEndLength = Math.max(dateTimeEnd.length(), dateTimeEndLength);
-            durationLength = Math.max(duration.length(), durationLength);
-            costLength = Math.max(cost.length(), costLength);
-
-            callTypes.add(callType);
-            dateTimesStart.add(dateTimeStart);
-            dateTimesEnd.add(dateTimeEnd);
-            durations.add(duration);
-            costs.add(cost);
+            Duration duration = call.getDuration();
+            if (duration.compareTo(maxDuration) > 0) {
+                maxDuration = duration;
+            }
         }
+        costLength = Math.max(costString(maxCost).length(), costLength);
+        durationLength = Math.max(durationString(maxDuration).length(), durationLength);
 
-        for (int index = 0; index < report.calls.size(); index++) {
-            callTypes.set(
-                    index,
-                    callTypes.get(index) +
-                            emptyString(callTypeLength - callTypes.get(index).length())
-            );
-            dateTimesStart.set(
-                    index,
-                    dateTimesStart.get(index) +
-                            emptyString(dateTimeStartLength - dateTimesStart.get(index).length())
-            );
-            dateTimesEnd.set(
-                    index,
-                    dateTimesEnd.get(index) +
-                            emptyString(dateTimeEndLength - dateTimesEnd.get(index).length())
-            );
-            durations.set(
-                    index,
-                    durations.get(index) +
-                            emptyString(durationLength - durations.get(index).length())
-            );
-            costs.set(
-                    index,
-                    costs.get(index) +
-                            emptyString(costLength - costs.get(index).length())
-            );
-        }
-
-        callTypeTitle += emptyString(callTypeLength - callTypeTitle.length());
-        dateTimeStartTitle += emptyString(dateTimeStartLength - dateTimeStartTitle.length());
-        dateTimeEndTitle += emptyString(dateTimeEndLength - dateTimeEndTitle.length());
-        durationTitle += emptyString(durationLength - durationTitle.length());
-        costTitle += emptyString(costLength - costTitle.length());
-
-        StringBuilder text = new StringBuilder("Tariff: " + report.tariffType + "\n");
-        text.append("Phone number: ").append(report.phoneNumber).append("\n");
+        rowHandler.accept("Tariff: " + report.tariffType + "\n");
+        rowHandler.accept("Phone number: ");
+        rowHandler.accept(report.phoneNumber);
+        rowHandler.accept("\n");
 
         String horisontalSeparator = " | ";
         int separatorsNumber = 6;
@@ -124,32 +83,55 @@ public class FileUtils {
                 separatorsNumber * horisontalSeparator.length();
         String linesSeparator = "–".repeat(lineLength) + "\n";
 
-        text.append(linesSeparator);
+        rowHandler.accept(linesSeparator);
 
-        text.append(horisontalSeparator);
-        text.append(callTypeTitle).append(horisontalSeparator);
-        text.append(dateTimeStartTitle).append(horisontalSeparator);
-        text.append(dateTimeEndTitle).append(horisontalSeparator);
-        text.append(durationTitle).append(horisontalSeparator);
-        text.append(costTitle).append(horisontalSeparator).append("\n");
+        rowHandler.accept(horisontalSeparator);
+        rowHandler.accept(stringWithLength(callTypeTitle, callTypeLength));
+        rowHandler.accept(horisontalSeparator);
+        rowHandler.accept(stringWithLength(dateTimeStartTitle, dateTimeStartLength));
+        rowHandler.accept(horisontalSeparator);
+        rowHandler.accept(stringWithLength(dateTimeEndTitle, dateTimeEndLength));
+        rowHandler.accept(horisontalSeparator);
+        rowHandler.accept(stringWithLength(durationTitle, durationLength));
+        rowHandler.accept(horisontalSeparator);
+        rowHandler.accept(stringWithLength(costTitle, costLength));
+        rowHandler.accept(horisontalSeparator);
+        rowHandler.accept("\n");
 
-        text.append(linesSeparator);
+        rowHandler.accept(linesSeparator);
 
-        for (int index = 0; index < report.calls.size(); index++) {
-            text.append(horisontalSeparator);
-            text.append(callTypes.get(index)).append(horisontalSeparator);
-            text.append(dateTimesStart.get(index)).append(horisontalSeparator);
-            text.append(dateTimesEnd.get(index)).append(horisontalSeparator);
-            text.append(durations.get(index)).append(horisontalSeparator);
-            text.append(costs.get(index)).append(horisontalSeparator).append("\n");
+        for (Call call : report.calls) {
+            rowHandler.accept(horisontalSeparator);
+            rowHandler.accept(stringWithLength(call.callType.toString(), callTypeLength));
+            rowHandler.accept(horisontalSeparator);
+            rowHandler.accept(stringWithLength(datetimeString(call.dateTimeStart), dateTimeStartLength));
+            rowHandler.accept(horisontalSeparator);
+            rowHandler.accept(stringWithLength(datetimeString(call.dateTimeEnd), dateTimeEndLength));
+            rowHandler.accept(horisontalSeparator);
+            rowHandler.accept(stringWithLength(durationString(call.getDuration()), durationLength));
+            rowHandler.accept(horisontalSeparator);
+            rowHandler.accept(stringWithLength(costString(call.rubCost), costLength));
+            rowHandler.accept(horisontalSeparator);
+            rowHandler.accept("\n");
         }
-        text.append(linesSeparator);
-        text.append("total cost: ").append(report.totalRUBCost).append(" RUB").append("\n");
-        return text.toString();
+
+        rowHandler.accept(linesSeparator);
+        rowHandler.accept("total cost: ");
+        rowHandler.accept(String.valueOf(report.totalRUBCost));
+        rowHandler.accept(" RUB");
+        rowHandler.accept("\n");
     }
 
-    private static String emptyString(int spacesCount) {
-        return " ".repeat(spacesCount);
+    private static String stringWithLength(String string, long length) {
+        return String.format("%1$" + length + "s", string);
+    }
+
+    private static String datetimeString(LocalDateTime dateTime) {
+        return dateTime.format(reportDateFormatter);
+    }
+
+    private static String costString(double cost) {
+        return String.format(costFormat, cost);
     }
 
     private static String durationString(Duration duration) {
@@ -162,7 +144,7 @@ public class FileUtils {
     }
 
     private static Call getCallFromLine(String line) {
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         try (Scanner rowScanner = new Scanner(line)) {
             rowScanner.useDelimiter(", ");
             while (rowScanner.hasNext()) {
@@ -181,8 +163,14 @@ public class FileUtils {
 
         Files.createDirectories(Paths.get(dirName));
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
-
-        writer.write(reportString(report));
+        Consumer<String> rowConsumer = (row) -> {
+            try {
+                writer.write(row);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        reportStrings(report, rowConsumer);
 
         writer.close();
     }
